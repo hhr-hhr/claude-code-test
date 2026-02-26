@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>智能查询系统</title>
+  <style>
+    :root {
+      --primary: #5b6af9;
+      --primary-light: #eef0ff;
+      --primary-dark: #4453e0;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --text: #111827;
+      --text-muted: #6b7280;
+      --border: #e5e7eb;
+      --bg: #f3f4f8;
+      --card: #ffffff;
+      --radius: 14px;
+      --shadow: 0 4px 24px rgba(0,0,0,0.07);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ===== Header ===== */
+    header {
+      background: linear-gradient(135deg, #5b6af9 0%, #7c88fb 100%);
+      padding: 0 32px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 12px rgba(91,106,249,0.3);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #fff;
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .logo-icon {
+      width: 32px;
+      height: 32px;
+      background: rgba(255,255,255,0.25);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+
+    .badge {
+      background: rgba(255,255,255,0.2);
+      color: #fff;
+      font-size: 11px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+
+    /* ===== Main layout ===== */
+    main {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 36px 20px 60px;
+    }
+
+    /* ===== Search card ===== */
+    .search-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 28px 28px 22px;
+      margin-bottom: 24px;
+    }
+
+    .search-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 14px;
+    }
+
+    .search-bar {
+      display: flex;
+      gap: 10px;
+    }
+
+    .search-wrap {
+      flex: 1;
+      position: relative;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 16px;
+      pointer-events: none;
+    }
+
+    .search-input {
+      width: 100%;
+      height: 48px;
+      padding: 0 14px 0 42px;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      font-size: 15px;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      background: #fafafa;
+    }
+
+    .search-input::placeholder { color: #b0b7c3; }
+
+    .search-input:focus {
+      border-color: var(--primary);
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(91,106,249,0.12);
+    }
+
+    .search-btn {
+      height: 48px;
+      padding: 0 28px;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    .search-btn:hover { background: var(--primary-dark); }
+    .search-btn:active { transform: scale(0.97); }
+    .search-btn:disabled { background: #a5adf9; cursor: not-allowed; transform: none; }
+
+    .hint-row {
+      margin-top: 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .hint-label {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .hint-tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 10px;
+      background: var(--primary-light);
+      color: var(--primary);
+      border-radius: 20px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .hint-tag:hover { background: #dde0ff; }
+
+    /* ===== Stats bar ===== */
+    .stats-bar {
+      display: flex;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .stat-item {
+      flex: 1;
+      background: var(--card);
+      border-radius: 10px;
+      padding: 14px 18px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .stat-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .stat-icon.blue { background: #eef0ff; }
+    .stat-icon.green { background: #d1fae5; }
+    .stat-icon.orange { background: #fef3c7; }
+
+    .stat-info p {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 2px;
+    }
+
+    .stat-info strong {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    /* ===== Result panel ===== */
+    .result-panel {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .result-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .result-header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .result-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .result-count {
+      background: var(--primary-light);
+      color: var(--primary);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 20px;
+    }
+
+    .btn-clear {
+      height: 30px;
+      padding: 0 14px;
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-clear:hover {
+      color: var(--danger);
+      border-color: var(--danger);
+      background: transparent;
+    }
+
+    /* ===== Empty / placeholder ===== */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 60px 24px;
+      color: var(--text-muted);
+    }
+
+    .empty-state .empty-icon {
+      font-size: 48px;
+      margin-bottom: 14px;
+      opacity: 0.4;
+    }
+
+    .empty-state p {
+      font-size: 14px;
+    }
+
+    /* ===== Query log entries ===== */
+    .log-list {
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .log-entry {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      animation: fadeIn 0.25s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .log-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      background: #fafafa;
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .status-dot.ok { background: var(--success); }
+    .status-dot.err { background: var(--danger); }
+
+    .log-keyword {
+      font-weight: 600;
+      font-size: 13px;
+      color: var(--text);
+    }
+
+    .meta-tag {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: var(--border);
+      color: var(--text-muted);
+    }
+
+    .meta-tag.time { margin-left: auto; }
+
+    /* ===== Result items ===== */
+    .result-items {
+      padding: 10px 16px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .result-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: #f9fafc;
+      transition: background 0.15s;
+    }
+
+    .result-item:hover { background: var(--primary-light); }
+
+    .item-id {
+      font-size: 10px;
+      font-weight: 700;
+      color: #fff;
+      background: var(--primary);
+      padding: 2px 7px;
+      border-radius: 4px;
+      margin-top: 2px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .item-id.order { background: #10b981; }
+    .item-id.product { background: #f59e0b; }
+    .item-id.log { background: #8b5cf6; }
+
+    .item-body { flex: 1; min-width: 0; }
+
+    .item-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 3px;
+    }
+
+    .item-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .item-tag {
+      font-size: 11px;
+      padding: 1px 8px;
+      border-radius: 4px;
+      flex-shrink: 0;
+      align-self: center;
+    }
+
+    .tag-用户 { background: #dbeafe; color: #1d4ed8; }
+    .tag-订单 { background: #d1fae5; color: #065f46; }
+    .tag-商品 { background: #fef3c7; color: #92400e; }
+    .tag-日志 { background: #ede9fe; color: #5b21b6; }
+
+    .no-result {
+      padding: 16px;
+      text-align: center;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .error-msg {
+      padding: 14px 16px;
+      color: var(--danger);
+      font-size: 13px;
+      background: #fff5f5;
+    }
+
+    /* ===== Spinner ===== */
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255,255,255,0.5);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.65s linear infinite;
+      vertical-align: middle;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 600px) {
+      header { padding: 0 16px; }
+      main { padding: 20px 12px 40px; }
+      .search-card { padding: 20px 16px 16px; }
+      .stats-bar { flex-direction: column; gap: 10px; }
+      .search-btn { padding: 0 18px; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo">
+      <div class="logo-icon">&#128269;</div>
+      智能查询系统
+    </div>
+    <span class="badge">Spring Boot Demo</span>
+  </header>
+
+  <main>
+
+    <!-- 搜索区 -->
+    <div class="search-card">
+      <div class="search-title">数据检索</div>
+      <div class="search-bar">
+        <div class="search-wrap">
+          <span class="search-icon">&#128269;</span>
+          <input
+            class="search-input"
+            id="queryInput"
+            type="text"
+            placeholder="输入关键词，如：张三、订单、Spring Boot..."
+            autocomplete="off"
+          />
+        </div>
+        <button class="search-btn" id="queryBtn" onclick="doQuery()">
+          <span id="btnText">查询</span>
+        </button>
+      </div>
+      <div class="hint-row">
+        <span class="hint-label">快捷示例：</span>
+        <span class="hint-tag" onclick="fillAndQuery('用户')">用户</span>
+        <span class="hint-tag" onclick="fillAndQuery('订单')">订单</span>
+        <span class="hint-tag" onclick="fillAndQuery('Spring')">Spring</span>
+        <span class="hint-tag" onclick="fillAndQuery('日志')">日志</span>
+        <span class="hint-tag" onclick="fillAndQuery('失败')">失败</span>
+      </div>
+    </div>
+
+    <!-- 统计栏 -->
+    <div class="stats-bar">
+      <div class="stat-item">
+        <div class="stat-icon blue">&#128202;</div>
+        <div class="stat-info">
+          <p>累计查询次数</p>
+          <strong id="statTotal">0</strong>
+        </div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-icon green">&#9989;</div>
+        <div class="stat-info">
+          <p>成功次数</p>
+          <strong id="statSuccess">0</strong>
+        </div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-icon orange">&#9201;</div>
+        <div class="stat-info">
+          <p>平均耗时</p>
+          <strong id="statAvg">-</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- 结果区 -->
+    <div class="result-panel">
+      <div class="result-header">
+        <div class="result-header-left">
+          <span class="result-title">查询结果</span>
+          <span class="result-count" id="logCount">0 条记录</span>
+        </div>
+        <button class="btn-clear" onclick="clearAll()">清空记录</button>
+      </div>
+      <div id="resultBody">
+        <div class="empty-state">
+          <div class="empty-icon">&#128270;</div>
+          <p>请输入关键词开始查询</p>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    const API_URL = '/api/query';
+
+    let statTotalCount = 0;
+    let statSuccessCount = 0;
+    let statTotalMs = 0;
+    let logEntries = [];
+
+    const queryInput = document.getElementById('queryInput');
+    const queryBtn   = document.getElementById('queryBtn');
+    const btnText    = document.getElementById('btnText');
+    const resultBody = document.getElementById('resultBody');
+
+    queryInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') doQuery();
+    });
+
+    function fillAndQuery(kw) {
+      queryInput.value = kw;
+      doQuery();
+    }
+
+    async function doQuery() {
+      const query = queryInput.value.trim();
+      if (!query) { queryInput.focus(); return; }
+
+      setLoading(true);
+      const t0 = Date.now();
+
+      try {
+        const res = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query })
+        });
+        const data = await res.json();
+        const cost = Date.now() - t0;
+
+        addLog({ ok: data.success, query, data, cost });
+        updateStats(data.success, cost);
+      } catch (err) {
+        const cost = Date.now() - t0;
+        addLog({ ok: false, query, error: err.message, cost });
+        updateStats(false, cost);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    function addLog(entry) {
+      logEntries.unshift(entry);
+      renderLogs();
+    }
+
+    function renderLogs() {
+      if (logEntries.length === 0) {
+        resultBody.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">&#128270;</div>
+            <p>请输入关键词开始查询</p>
+          </div>`;
+        document.getElementById('logCount').textContent = '0 条记录';
+        return;
+      }
+
+      document.getElementById('logCount').textContent = logEntries.length + ' 条记录';
+
+      const html = '<div class="log-list">' +
+        logEntries.map(e => renderEntry(e)).join('') +
+        '</div>';
+      resultBody.innerHTML = html;
+    }
+
+    function renderEntry(e) {
+      const time = new Date().toLocaleTimeString();
+      const dotClass = e.ok ? 'ok' : 'err';
+      const statusText = e.ok ? '成功' : '失败';
+
+      let bodyHtml;
+
+      if (e.error) {
+        bodyHtml = `<div class="error-msg">&#10007; 请求异常：${esc(e.error)}</div>`;
+      } else if (!e.data.success) {
+        bodyHtml = `<div class="error-msg">&#10007; ${esc(e.data.message || '接口返回失败')}</div>`;
+      } else {
+        const items = e.data.results || [];
+        if (items.length === 0) {
+          bodyHtml = `<div class="no-result">&#128269; 未找到与 "${esc(e.query)}" 相关的数据</div>`;
+        } else {
+          bodyHtml = '<div class="result-items">' +
+            items.map(item => {
+              const idClass = item.id.startsWith('O') ? 'order'
+                            : item.id.startsWith('P') ? 'product'
+                            : item.id.startsWith('L') ? 'log' : '';
+              return `
+                <div class="result-item">
+                  <span class="item-id ${idClass}">${esc(item.id)}</span>
+                  <div class="item-body">
+                    <div class="item-title">${esc(item.title)}</div>
+                    <div class="item-desc">${esc(item.description)}</div>
+                  </div>
+                  <span class="item-tag tag-${esc(item.tag)}">${esc(item.tag)}</span>
+                </div>`;
+            }).join('') +
+            '</div>';
+        }
+      }
+
+      const total = e.data ? e.data.total : 0;
+
+      return `
+        <div class="log-entry">
+          <div class="log-meta">
+            <span class="status-dot ${dotClass}"></span>
+            <span class="log-keyword">"${esc(e.query)}"</span>
+            <span class="meta-tag">${statusText}</span>
+            ${e.data ? `<span class="meta-tag">${total} 条</span>` : ''}
+            <span class="meta-tag">${e.cost}ms</span>
+            <span class="meta-tag time">${new Date().toLocaleTimeString()}</span>
+          </div>
+          ${bodyHtml}
+        </div>`;
+    }
+
+    function updateStats(success, cost) {
+      statTotalCount++;
+      if (success) statSuccessCount++;
+      statTotalMs += cost;
+
+      document.getElementById('statTotal').textContent = statTotalCount;
+      document.getElementById('statSuccess').textContent = statSuccessCount;
+      document.getElementById('statAvg').textContent =
+        Math.round(statTotalMs / statTotalCount) + 'ms';
+    }
+
+    function clearAll() {
+      logEntries = [];
+      statTotalCount = 0;
+      statSuccessCount = 0;
+      statTotalMs = 0;
+      document.getElementById('statTotal').textContent = '0';
+      document.getElementById('statSuccess').textContent = '0';
+      document.getElementById('statAvg').textContent = '-';
+      renderLogs();
+    }
+
+    function setLoading(on) {
+      queryBtn.disabled = on;
+      btnText.innerHTML = on ? '<span class="spinner"></span> 查询中' : '查询';
+    }
+
+    function esc(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+  </script>
+</body>
+</html>
